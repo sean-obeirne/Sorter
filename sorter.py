@@ -71,18 +71,28 @@ def mul2(comp):
         comp.set_text(str(arr_ct))
 
 def reset():
+    global sorting
+    sorting = False
     pass
 
 def quick_sort():
+    global sorting
+    sorting = True
     pass
 
 def heap_sort():
+    global sorting
+    sorting = True
     pass
 
 def merge_sort():
+    global sorting
+    sorting = True
     pass
 
 def bubble_sort():
+    global sorting
+    sorting = True
     pass
 
 
