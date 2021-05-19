@@ -141,31 +141,38 @@ def reset():
 #####################
 
 # Quick Sort #
-# recursive quicksort helper
-def qsort():
+def partition(low, high):
     global arr
     
-    if len(arr) <= 1:
-        return arr
+    new_pivot_i = low-1
+    pivot = arr[high].val
 
-    pivot = random.randint(0, len(arr))
-    lt = list()
-    gt = list()
-    for bar in arr:
-        if bar.val <= pivot:
-            lt.append(bar)
-        if bar.val > pivot:
-            gt.append(bar)
+    for i in range(low, high):
+        if arr[i].val <= pivot:
+            new_pivot_i += 1 # pivot needs to be 1 further to the right
+            arr[new_pivot_i], arr[i] = arr[i], arr[new_pivot_i] # swap in low value at old pivot spot
+            time.sleep(1/(arr_ct))
+    arr[new_pivot_i+1], arr[high] = arr[high], arr[new_pivot_i+1]
+    time.sleep(1/(arr_ct))
 
-    return qsort(lt) + qsort(gt)
+    return new_pivot_i + 1
+
+def quick_sort_helper(low, high):
+    global arr
+
+    if low < high:
+        pivot_i = partition(low, high)
+        quick_sort_helper(low, pivot_i-1)
+        quick_sort_helper(pivot_i+1, high)
 
 
-def quick_sort():
+
+def quick_sort(low=0, high=None):
     global sorting
     global arr
     sorting = True
 
-    qsort()
+    quick_sort_helper(0,arr_ct-1)
 
     sorting = False
 
