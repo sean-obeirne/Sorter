@@ -39,7 +39,12 @@ UI_x_offset = 0     # how far from left of screen UI begins
 bar_x_offset = 38   # how far from left of screen bars are drawn
 UI_x_cur = 25 + UI_x_offset # next UI component's x value
 UI_components = list()
+threads = list()    # threads that run sorting algorithms
 
+# bar states for coloring
+INACTIVE = 0
+ACTIVE = 1
+FINISHED = 2
 
 
 
@@ -71,15 +76,28 @@ class Component:
 
 # A Bar is simple a white bar to be drawn in order to reflect some value in our list to be sorted
 class Bar:
-    def __init__(self, val, factor=20, bcolor=WHITE, tcolor=BLACK):
+    def __init__(self, val, factor=20, bcolor=WHITE, tcolor=BLACK, state=INACTIVE):
         self.val = val
         self.hgt = val * factor
         self.bcolor = bcolor
         self.tcolor = tcolor
+        self.state = state
         self.textsurface = font.render(str(self.val), True, self.tcolor)
 
+    def activate(self):
+        self.state = ACTIVE
+    def deactivate(self):
+        self.state = INACTIVE
+    def finish(self):
+        self.state = FINISHED
+
     def draw(self, surface, x, y, wid):
-        pygame.draw.rect(surface, self.bcolor, (x, y, wid, self.hgt))
+        if self.state == INACTIVE:
+            pygame.draw.rect(surface, self.bcolor, (x, y, wid, self.hgt))
+        if self.state == ACTIVE:
+            pygame.draw.rect(surface, RED, (x, y, wid, self.hgt))
+        if self.state == FINISHED:
+            pygame.draw.rect(surface, GREEN, (x, y, wid, self.hgt))
         text_rect = self.textsurface.get_rect(center=(wid/2 + x, self.hgt/2 + y))
         # surface.blit(self.textsurface,text_rect)
 
@@ -105,6 +123,21 @@ def draw_bars():
         bar.draw(screen, x_cur, TOP_BAR_HGT, bwidth)
         x_cur += 1 + bwidth
 
+def global_deactivate():
+    global arr
+    for bar in arr:
+        bar.deactivate()
+
+
+def activate_range(low, high):
+    for i in range(low, high):
+        arr[i].activate()
+def deactivate_range(low, high):
+    for i in range(low, high):
+        arr[i].deactivate()
+def finish_range(low, high):
+    for i in range(low, high):
+        arr[i].finish()
 
 ####################
 # Button Functions #
@@ -132,6 +165,10 @@ def mul2(comp):
 def reset():
     global sorting
     sorting = False
+    for thread in threads:
+        thread.join() # we join threads to make sure nothing will alter state after we reset
+    threads.clear()
+    global_deactivate()
     init_bars()
     pass
 
@@ -160,10 +197,24 @@ def partition(low, high):
 def quick_sort_helper(low, high):
     global arr
 
+    if not sorting:
+        return
+
     if low < high:
+        activate_range(low,high)
         pivot_i = partition(low, high)
+        deactivate_range(low,high)
+        arr[high].deactivate()
+
+        # activate_range(low,pivot_i-1)
         quick_sort_helper(low, pivot_i-1)
+        finish_range(low,pivot_i-1)
+        arr[pivot_i].finish()
+
+        # activate_range(pivot_i-1,high)
         quick_sort_helper(pivot_i+1, high)
+        finish_range(pivot_i-1,high)
+        arr[high].finish()
 
 
 
@@ -171,6 +222,8 @@ def quick_sort(low=0, high=None):
     global sorting
     global arr
     sorting = True
+
+    global_deactivate()
 
     quick_sort_helper(0,arr_ct-1)
 
@@ -188,19 +241,24 @@ def heapify(i, n):
     li = 2*i + 1
     ri = 2*i + 2
 
+    arr[i].activate()
+
     # check if left exists and is bigger than root
-    if li < n and arr[li].val > arr[largest].val:
-        largest = li
+    if li < n:
+        if arr[li].val > arr[largest].val:
+            largest = li
 
     # check if right exists and is bigger than root
-    if ri < n and arr[ri].val > arr[largest].val:
-        largest = ri
+    if ri < n:
+        if arr[ri].val > arr[largest].val:
+            largest = ri
 
     # swap if needed
     if largest != i:
         arr[i], arr[largest] = arr[largest], arr[i]
         time.sleep(1/(arr_ct))
         heapify(largest, n)
+    arr[i].deactivate()
 
 # Build the max heap using heapify, then extract the root and heapify.
 # Repeat to extract all values in order
@@ -208,6 +266,8 @@ def heap_sort():
     global sorting
     global arr
     sorting = True
+
+    global_deactivate()
 
     n = arr_ct
 
@@ -219,8 +279,10 @@ def heap_sort():
 
     # Extract top
     while n > 0:
+        arr[0].finish()
         arr[n-1], arr[0] = arr[0], arr[n-1]
         heapify(0, n-1)
+        arr[n-1].finish()
         n -= 1
         if not sorting:
             return
@@ -233,6 +295,8 @@ def merge_sort():
     global arr
     sorting = True
 
+    global_deactivate()
+
     sorting = False
 
 # Bubble Sort #
@@ -242,13 +306,24 @@ def bubble_sort():
     global arr
     sorting = True
 
+    global_deactivate()
+
+    end = arr_ct-1
+
     for bar in arr:
         for i in range(len(arr)-1):
+            arr[i].activate()
+            arr[i+1].activate()
             if not sorting:
                 return
             if arr[i].val > arr[i+1].val:
                 arr[i], arr[i+1] = arr[i+1], arr[i]
                 time.sleep(1/(arr_ct*2))
+            arr[i].deactivate()
+            arr[i+1].deactivate()
+        for i in range(end, arr_ct):
+            arr[i].finish()
+        end -= 1
 
     sorting = False
 
@@ -309,15 +384,19 @@ while(running):
                 if not sorting:
                     if quick_comp.Component.collidepoint(mpos):
                         th = threading.Thread(target=quick_sort)
+                        threads.append(th)
                         th.start()
                     elif heap_comp.Component.collidepoint(mpos):
                         th = threading.Thread(target=heap_sort)
+                        threads.append(th)
                         th.start()
                     elif merge_comp.Component.collidepoint(mpos):
                         th = threading.Thread(target=merge_sort)
+                        threads.append(th)
                         th.start()
                     elif bubble_comp.Component.collidepoint(mpos):
                         th = threading.Thread(target=bubble_sort)
+                        threads.append(th)
                         th.start()
                 break
 
