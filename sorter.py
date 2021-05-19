@@ -135,6 +135,11 @@ def reset():
     init_bars()
     pass
 
+
+#####################
+# Sorting Functions #
+#####################
+
 # Quick Sort #
 # recursive quicksort helper
 def qsort():
@@ -241,9 +246,7 @@ def bubble_sort():
     sorting = False
 
 
-#
 # Initialize UI components
-#
 div2_comp = Component(UI_x_cur,30,'/2',wid=75)
 UI_components.append(div2_comp)
 UI_x_cur += 75
@@ -281,9 +284,7 @@ UI_components.append(bubble_comp)
 
 init_bars()
 
-#
 # Main game loop
-#
 while(running):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
