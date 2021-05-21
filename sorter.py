@@ -32,7 +32,7 @@ font = pygame.font.SysFont('monospace', 40)
 running = True
 sorting = False
 
-arr_ct = 2
+arr_ct = 8
 arr = list()
 
 UI_x_offset = 0     # how far from left of screen UI begins
@@ -218,9 +218,8 @@ def quick_sort_helper(low, high):
 
 
 
-def quick_sort(low=0, high=None):
+def quick_sort():
     global sorting
-    global arr
     sorting = True
 
     global_deactivate()
@@ -289,6 +288,70 @@ def heap_sort():
 
     sorting = False
 
+#   l: left most left index
+#   rl: right most left index
+#   lr: left most right index
+#   r: right most right index
+def merge(l, rl, lr, r):
+    # loop through l->rl and merge it with lr->r
+    global arr
+
+    activate_range(l, r+1)
+
+    temp = list()
+    l_cur = l
+    r_cur = lr
+
+    while l_cur <= rl and r_cur <= r:
+        if not sorting:
+            break
+        if r_cur >= arr_ct:
+            break
+        if arr[l_cur].val < arr[r_cur].val:
+            temp.append(arr[l_cur])
+            l_cur += 1
+        else:
+            temp.append(arr[r_cur])
+            r_cur += 1
+    while l_cur <= rl:
+        if not sorting:
+            break
+        temp.append(arr[l_cur])
+        l_cur += 1
+    while r_cur <= r:
+        if not sorting:
+            break
+        temp.append(arr[r_cur])
+        r_cur += 1
+
+    temp_cur = 0
+    for i in range(l, r+1):
+        if not sorting:
+            break
+        ttemp = arr[i]
+        arr[i] = temp[temp_cur]
+        # if l == 0 and r == arr_ct-1:
+            # arr[i].finish()
+        if  r - l == arr_ct - 1:
+            arr[i].finish()
+        temp_cur += 1
+        time.sleep(1/(arr_ct))
+    deactivate_range(l, r+1)
+            
+
+def merge_sort_helper(l, r):
+    global arr
+    if not sorting:
+        return
+
+    # split up the array partitions
+    mid = (l+r) // 2
+    if l < r:
+        merge_sort_helper(l, mid)
+        merge_sort_helper(mid+1, r)
+        merge(l, mid, mid+1, r)
+    
+
 # Merge Sort #
 def merge_sort():
     global sorting
@@ -296,6 +359,8 @@ def merge_sort():
     sorting = True
 
     global_deactivate()
+
+    merge_sort_helper(0, arr_ct-1)
 
     sorting = False
 
