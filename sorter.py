@@ -55,42 +55,59 @@ FINISHED = 2
 # An item of the UI to be interacted with
 class Component:
     def __init__(self, x, y, text, wid=100, hgt=40, bcolor=LGRAY, tcolor=BLACK):
-        self.x = x
-        self.y = y
-        self.text = text
-        self.wid = wid
-        self.hgt = hgt
-        self.bcolor = bcolor
-        self.tcolor = tcolor
+        self.x = x              # x position of component
+        self.y = y              # y position of component
+        self.text = text        # text to write on component
+        self.wid = wid          # width of component
+        self.hgt = hgt          # height of component
+        self.bcolor = bcolor    # background color of component
+        self.tcolor = tcolor    # text color of component
+
+        # text surface of component
         self.textsurface = font.render(self.text, True, self.tcolor)
+        # physical component (for mouse collision detection)
         self.Component = pygame.draw.rect(screen, self.bcolor, (self.x, self.y, wid, hgt))
 
+    # Change the text of this component
+    #   new: new text to change component text to
     def set_text(self, new):
         self.text = new
         self.textsurface = font.render(self.text, True, self.tcolor)
 
+    # Draw this component
+    #   surface: the pygame surface to draw this component on (usually 'screen')
     def draw(self, surface):
         pygame.draw.rect(surface, self.bcolor, (self.x, self.y, self.wid, self.hgt))
         text_rect = self.textsurface.get_rect(center=(self.wid/2 + self.x, self.hgt/2 + self.y))
         surface.blit(self.textsurface,text_rect)
 
-# A Bar is simple a white bar to be drawn in order to reflect some value in our list to be sorted
+# A Bar is simply a white bar to be drawn in order to reflect some value in our list to be sorted
 class Bar:
     def __init__(self, val, factor=20, bcolor=WHITE, tcolor=BLACK, state=INACTIVE):
-        self.val = val
-        self.hgt = val * factor
-        self.bcolor = bcolor
-        self.tcolor = tcolor
-        self.state = state
+        self.val = val          # number reflected by this bar
+        self.hgt = val * factor # height of bar
+        self.bcolor = bcolor    # background color of bar
+        self.tcolor = tcolor    # text color for bar
+        self.state = state      # current state of bar
         self.textsurface = font.render(str(self.val), True, self.tcolor)
 
+    # Set state to ACTIVE, meaning turn bar red
     def activate(self):
         self.state = ACTIVE
+
+    # Set state to INACTIVE, meaning turn bar white
     def deactivate(self):
         self.state = INACTIVE
+
+    # Set state to FINISHED, meaning turn bar green
     def finish(self):
         self.state = FINISHED
 
+    # Draw bar according to state (for color) and draw text if applicable
+    #   surface: pygame surface to draw on, usually 'screen'
+    #   x: x position to draw bar at
+    #   y: y position to draw bar at
+    #   wid: width of bar to draw
     def draw(self, surface, x, y, wid):
         if self.state == INACTIVE:
             pygame.draw.rect(surface, self.bcolor, (x, y, wid, self.hgt))
@@ -98,7 +115,8 @@ class Bar:
             pygame.draw.rect(surface, RED, (x, y, wid, self.hgt))
         if self.state == FINISHED:
             pygame.draw.rect(surface, GREEN, (x, y, wid, self.hgt))
-        text_rect = self.textsurface.get_rect(center=(wid/2 + x, self.hgt/2 + y))
+        # if drawing text:
+        # text_rect = self.textsurface.get_rect(center=(wid/2 + x, self.hgt/2 + y))
         # surface.blit(self.textsurface,text_rect)
 
 # Randomize the order of bars so they may be sorted
@@ -106,41 +124,52 @@ def randomize_bars():
     global arr
     arr = sorted(arr, key = lambda x: random.random() )
 
-# Initialize array of Bars
+# Initialize array of Bars (with correct heights)
 def init_bars():
     arr.clear()
-    fact = 600 / arr_ct
+    fact = 600 / arr_ct # subdivide vertical space for each bar
     for i in range(1, arr_ct + 1):
         arr.append(Bar(i, factor=fact))
     randomize_bars()
 
 # Intelligently draw bars within the confines of the screen
 def draw_bars():
-    global arr
     bwidth = int((1024 / arr_ct) - 1)
     x_cur = bar_x_offset
     for bar in arr:
         bar.draw(screen, x_cur, TOP_BAR_HGT, bwidth)
         x_cur += 1 + bwidth
 
+# Get the standard delay time for an algorithm array manipulation
 def get_time(bubble=False):
     if bubble:
         return 1/(arr_ct*2) # speed up bubble sort
     else:
         return 1/(arr_ct/2)
 
+# Deactivate (as in set color to white for) all bars
 def global_deactivate():
     global arr
     for bar in arr:
         bar.deactivate()
 
-
+# Activate (as in set color to red for) range of bars from low to high
+#   low: lowest index to activate
+#   high: 1 + highest index to activate (meaning, this is exclusive)
 def activate_range(low, high):
     for i in range(low, high):
         arr[i].activate()
+
+# Deactivate (as in set color to white for) range of bars from low to high
+#   low: lowest index to deactivate
+#   high: 1 + highest index to deactivate (meaning, this is exclusive)
 def deactivate_range(low, high):
     for i in range(low, high):
         arr[i].deactivate()
+
+# Finish (as in set color to green for) range of bars from low to high
+#   low: lowest index to finish
+#   high: 1 + highest index to finish (meaning, this is exclusive)
 def finish_range(low, high):
     for i in range(low, high):
         arr[i].finish()
@@ -170,13 +199,15 @@ def mul2(comp):
 # Cancel all sorting and reinitialize the Bars on screen
 def reset():
     global sorting
-    sorting = False
+    sorting = False # tell all sorting algorithms to stop when they can
+
     for thread in threads:
-        thread.join() # we join threads to make sure nothing will alter state after we reset
+        thread.join() # make sure nothing will alter state after we reset
     threads.clear()
-    global_deactivate()
+
+    global_deactivate() # color all bars white
+
     init_bars()
-    pass
 
 
 #####################
@@ -185,6 +216,11 @@ def reset():
 
 # BEGIN QUICK SORT ############################################################
 
+# Quick sort partition function
+# Goes through the array from low to high,
+# inserting values below the pivot as necessary.
+#   low: lowest index to include in this partition
+#   high: highest index to include in this partition
 def partition(low, high):
     global arr
     
@@ -201,6 +237,9 @@ def partition(low, high):
 
     return new_pivot_i + 1
 
+# Quick sort recursive function
+#   low: lowest index to include in this partition
+#   high: highest index to include in this partition
 def quick_sort_helper(low, high):
     global arr
 
@@ -211,18 +250,24 @@ def quick_sort_helper(low, high):
         activate_range(low,high+1)
         pivot_i = partition(low, high)
         deactivate_range(low,high+1)
-        if high - low <= 1:
-            finish_range(low,high+1)
+        # if high - low <= 1:
+            # finish_range(low,high+1)
+
+        if not sorting:
+            return
 
         quick_sort_helper(low, pivot_i-1)
         finish_range(low,pivot_i-1+2) 
         # at this point the pivot at pivot_i+1 is inserted correctly; finish it
 
+        if not sorting:
+            return
+
         quick_sort_helper(pivot_i+1, high)
         finish_range(pivot_i,high+1)
 
 
-
+# Execute the quick sort sorting algorithm
 def quick_sort():
     global sorting
     sorting = True
