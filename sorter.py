@@ -123,6 +123,12 @@ def draw_bars():
         bar.draw(screen, x_cur, TOP_BAR_HGT, bwidth)
         x_cur += 1 + bwidth
 
+def get_time(bubble=False):
+    if bubble:
+        return 1/(arr_ct*2) # speed up bubble sort
+    else:
+        return 1/(arr_ct/2)
+
 def global_deactivate():
     global arr
     for bar in arr:
@@ -177,7 +183,8 @@ def reset():
 # Sorting Functions #
 #####################
 
-# Quick Sort #
+# BEGIN QUICK SORT ############################################################
+
 def partition(low, high):
     global arr
     
@@ -188,9 +195,9 @@ def partition(low, high):
         if arr[i].val <= pivot:
             new_pivot_i += 1 # pivot needs to be 1 further to the right
             arr[new_pivot_i], arr[i] = arr[i], arr[new_pivot_i] # swap in low value at old pivot spot
-            time.sleep(1/(arr_ct))
-    arr[new_pivot_i+1], arr[high] = arr[high], arr[new_pivot_i+1]
-    time.sleep(1/(arr_ct))
+            time.sleep(get_time())
+    arr[new_pivot_i+1], arr[high] = arr[high], arr[new_pivot_i+1] # swap in pivot from high to cur pivot inex
+    time.sleep(get_time())
 
     return new_pivot_i + 1
 
@@ -201,20 +208,18 @@ def quick_sort_helper(low, high):
         return
 
     if low < high:
-        activate_range(low,high)
+        activate_range(low,high+1)
         pivot_i = partition(low, high)
-        deactivate_range(low,high)
-        arr[high].deactivate()
+        deactivate_range(low,high+1)
+        if high - low <= 1:
+            finish_range(low,high+1)
 
-        # activate_range(low,pivot_i-1)
         quick_sort_helper(low, pivot_i-1)
-        finish_range(low,pivot_i-1)
-        arr[pivot_i].finish()
+        finish_range(low,pivot_i-1+2) 
+        # at this point the pivot at pivot_i+1 is inserted correctly; finish it
 
-        # activate_range(pivot_i-1,high)
         quick_sort_helper(pivot_i+1, high)
-        finish_range(pivot_i-1,high)
-        arr[high].finish()
+        finish_range(pivot_i,high+1)
 
 
 
@@ -228,8 +233,11 @@ def quick_sort():
 
     sorting = False
 
+# END QUICK SORT ##############################################################
 
-# Heap Sort #
+
+# BEGIN HEAP SORT #############################################################
+
 # Heapify the node at index i in heap of length n
 #   i: the index of the root of this heap
 #   n: the bound for how large the heap is
@@ -255,7 +263,7 @@ def heapify(i, n):
     # swap if needed
     if largest != i:
         arr[i], arr[largest] = arr[largest], arr[i]
-        time.sleep(1/(arr_ct))
+        time.sleep(get_time())
         heapify(largest, n)
     arr[i].deactivate()
 
@@ -288,6 +296,14 @@ def heap_sort():
 
     sorting = False
 
+# END HEAP SORT ###############################################################
+
+
+# BEGIN MERGE SORT ############################################################
+
+# List has been partitioned, now merge two partitions in increasing order
+# First loop through and create temporary array to reflect new values,
+# then update the global array with new values
 #   l: left most left index
 #   rl: right most left index
 #   lr: left most right index
@@ -335,10 +351,11 @@ def merge(l, rl, lr, r):
         if  r - l == arr_ct - 1:
             arr[i].finish()
         temp_cur += 1
-        time.sleep(1/(arr_ct))
+        time.sleep(get_time())
     deactivate_range(l, r+1)
             
 
+# Merge sort recursive-call helper function
 def merge_sort_helper(l, r):
     global arr
     if not sorting:
@@ -352,7 +369,7 @@ def merge_sort_helper(l, r):
         merge(l, mid, mid+1, r)
     
 
-# Merge Sort #
+# Set up environment for sorting then launch merge sort
 def merge_sort():
     global sorting
     global arr
@@ -364,7 +381,11 @@ def merge_sort():
 
     sorting = False
 
-# Bubble Sort #
+# END MERGE SORT ##############################################################
+
+
+# BEGIN BUBBLE SORT ###########################################################
+
 # Loop through the list, swapping each entry which is larger than its successor
 def bubble_sort():
     global sorting
@@ -383,7 +404,7 @@ def bubble_sort():
                 return
             if arr[i].val > arr[i+1].val:
                 arr[i], arr[i+1] = arr[i+1], arr[i]
-                time.sleep(1/(arr_ct*2))
+                time.sleep(get_time(True))
             arr[i].deactivate()
             arr[i+1].deactivate()
         for i in range(end, arr_ct):
@@ -392,6 +413,7 @@ def bubble_sort():
 
     sorting = False
 
+# END BUBBLE SORT #############################################################
 
 # Initialize UI components
 div2_comp = Component(UI_x_cur,30,'/2',wid=75)
