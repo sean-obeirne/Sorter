@@ -1,5 +1,4 @@
 # Sorter
-<<<<<<< HEAD
 Welcome to Sorter! This is my Python implementation of a sorting algorithm
 visualizer. The program can be exucted simply with:
 
