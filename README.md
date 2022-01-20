@@ -1,4 +1,5 @@
 # Sorter
+<<<<<<< HEAD
 Welcome to Sorter! This is my Python implementation of a sorting algorithm
 visualizer. The program can be exucted simply with:
 
@@ -22,5 +23,5 @@ the screen, the slower the bars are moved, and vice versa. This way sorting
 many bars does not take too long meanwhile sorting few bars provides a clear
 execution procedure.
 
-Thank you for reading and I hope you like the application!
+Thank you for reading and I hope you enjoy using the application!
 Sean O'Beirne
