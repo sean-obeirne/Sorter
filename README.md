@@ -2,7 +2,7 @@
 Welcome to Sorter! This is my Python implementation of a sorting algorithm
 visualizer. The program can be exucted simply with:
 
-python3 sorter.py
+`python3 sorter.py`
 
 This will open up the GUI for Sorter, implemented using pygame. On the top bar
 of the GUI you will find buttons to:
