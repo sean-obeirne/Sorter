@@ -4,8 +4,11 @@ visualizer. The program can be exucted simply with:
 
 `python3 sorter.py`
 
-This will open up the GUI for Sorter, implemented using pygame. On the top bar
-of the GUI you will find buttons to:
+This will open up the GUI for Sorter, implemented using pygame. 
+
+In depth training documentation is provided by the Mini Manual file in this repo.
+
+On the top bar of the GUI you will find buttons to:
 1. Halve the number of elements to sort 
 2. Double the number of elements to sort 
 3. Reset (scramble) the bars to sort. This also halts any in-progress sort
